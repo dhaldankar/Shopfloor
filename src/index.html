@@ -5,179 +5,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mCockpit - Shopfloor Execution</title>
 
-    <!-- Carbon Design System -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/@carbon/web-components@latest/styles.min.css"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/themes/light.css"
     />
-    <script
-      type="module"
-      src="https://unpkg.com/@carbon/web-components@latest/index.min.js"
-    ></script>
 
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <!-- Header -->
-    <cds-header aria-label="mCockpit">
-      <cds-header-name prefix="mSolutions">mCockpit</cds-header-name>
-      <cds-header-nav menu-bar-label="Navigation">
-        <cds-header-nav-item href="#dashboard" id="nav-dashboard"
-          >Dashboard</cds-header-nav-item
-        >
-        <cds-header-nav-item href="#machines" id="nav-machines"
-          >Machines</cds-header-nav-item
-        >
-      </cds-header-nav>
-    </cds-header>
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-brand">
+          <span class="brand-prefix">mSolutions</span>
+          <span class="brand-name">mCockpit</span>
+        </div>
+        <nav class="header-nav">
+          <sl-button variant="text" class="nav-link active" id="nav-dashboard"
+            >Dashboard</sl-button
+          >
+          <sl-button variant="text" class="nav-link" id="nav-machines"
+            >Machines</sl-button
+          >
+        </nav>
+      </div>
+    </header>
 
-    <!-- Main Content -->
     <main class="main-content">
-      <!-- Dashboard Section -->
       <section id="dashboard-section" class="content-section active">
-        <div class="page-header">
-          <h1>Shopfloor Dashboard</h1>
-          <p>Real-time overview of production operations</p>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-icon running">●</div>
-            <div class="kpi-content">
-              <div class="kpi-label">Running</div>
-              <div class="kpi-value" id="kpi-running">0</div>
-            </div>
+        <div class="page-header-dashboard">
+          <div class="header-left">
+            <h1>Shopfloor Dashboard</h1>
+            <p>Real-time overview of production operations</p>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-icon idle">●</div>
-            <div class="kpi-content">
-              <div class="kpi-label">Idle</div>
-              <div class="kpi-value" id="kpi-idle">0</div>
+          <div class="kpi-pills">
+            <div class="kpi-pill running filter-card" data-status="running">
+              <span class="kpi-pill-label">RUNNING</span>
+              <span class="kpi-pill-value" id="kpi-running">0</span>
             </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon maintenance">●</div>
-            <div class="kpi-content">
-              <div class="kpi-label">Maintenance</div>
-              <div class="kpi-value" id="kpi-maintenance">0</div>
+            <div class="kpi-pill idle filter-card" data-status="idle">
+              <span class="kpi-pill-label">IDLE</span>
+              <span class="kpi-pill-value" id="kpi-idle">0</span>
             </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon error">●</div>
-            <div class="kpi-content">
-              <div class="kpi-label">Error</div>
-              <div class="kpi-value" id="kpi-error">0</div>
+            <div
+              class="kpi-pill maintenance filter-card"
+              data-status="maintenance"
+            >
+              <span class="kpi-pill-label">MAINTENANCE</span>
+              <span class="kpi-pill-value" id="kpi-maintenance">0</span>
+            </div>
+            <div class="kpi-pill error filter-card" data-status="error">
+              <span class="kpi-pill-label">ERROR</span>
+              <span class="kpi-pill-value" id="kpi-error">0</span>
             </div>
           </div>
         </div>
 
-        <!-- Real-time Machine Status -->
-        <div class="dashboard-section">
-          <h2>Real-Time Machine Status</h2>
-          <div id="machine-status-grid" class="machine-grid"></div>
-        </div>
-
-        <!-- Production Overview -->
-        <div class="dashboard-section">
-          <h2>Production Overview</h2>
-          <div class="production-stats">
-            <div class="stat-item">
-              <span class="stat-label">Total Output Today:</span>
-              <span class="stat-value" id="total-output">0</span>
+        <sl-card class="production-overview-card">
+          <div
+            slot="header"
+            style="display: flex; align-items: center; gap: 0.5rem"
+          >
+            <h2>Production Overview</h2>
+            <sl-button
+              id="clear-filter-btn"
+              variant="text"
+              size="small"
+              style="display: none; margin-left: auto"
+            >
+              <sl-icon slot="prefix" name="x-circle"></sl-icon>
+              Clear Filter
+            </sl-button>
+          </div>
+          <div class="production-overview-horizontal">
+            <div class="overview-stat">
+              <span class="overview-label">Total Output Today</span>
+              <span class="overview-value" id="total-output">0</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Overall Efficiency:</span>
-              <span class="stat-value" id="overall-efficiency">0%</span>
+            <sl-divider vertical></sl-divider>
+            <div class="overview-stat">
+              <span class="overview-label">Overall Efficiency</span>
+              <span class="overview-value" id="overall-efficiency">0%</span>
+            </div>
+            <sl-divider vertical></sl-divider>
+            <div class="overview-stat">
+              <span class="overview-label">Active Machines</span>
+              <span class="overview-value" id="active-machines">0</span>
+            </div>
+            <sl-divider vertical></sl-divider>
+            <div class="overview-stat">
+              <span class="overview-label">Total Machines</span>
+              <span class="overview-value" id="total-machines">0</span>
             </div>
           </div>
-        </div>
+        </sl-card>
+
+        <sl-card class="kanban-card">
+          <div slot="header">
+            <h2>Real-Time Machine Status</h2>
+          </div>
+          <div id="machine-kanban-board" class="kanban-board"></div>
+        </sl-card>
       </section>
 
-      <!-- Machines Section -->
       <section id="machines-section" class="content-section">
         <div class="page-header">
-          <h1>Machine Management</h1>
-          <cds-button id="add-machine-btn">Add Machine</cds-button>
+          <div>
+            <h1>Machine Management</h1>
+            <p>Manage and monitor all production machines</p>
+          </div>
+          <sl-button variant="primary" id="add-machine-btn">
+            <sl-icon slot="prefix" name="plus-lg"></sl-icon>
+            Add Machine
+          </sl-button>
         </div>
 
-        <!-- Machine Table -->
-        <div class="table-container">
-          <table id="machines-table" class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Current Order</th>
-                <th>Output</th>
-                <th>Efficiency</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="machines-tbody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
+        <sl-card class="table-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Current Order</th>
+                  <th>Output</th>
+                  <th>Efficiency</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="machines-tbody"></tbody>
+            </table>
+          </div>
+        </sl-card>
       </section>
     </main>
 
-    <!-- Add/Edit Machine Modal -->
-    <cds-modal id="machine-modal" size="md">
-      <cds-modal-header>
-        <cds-modal-heading id="modal-title">Add Machine</cds-modal-heading>
-      </cds-modal-header>
-      <cds-modal-body>
-        <form id="machine-form">
-          <div class="form-group">
-            <label for="machine-name">Machine Name *</label>
-            <input type="text" id="machine-name" required />
-          </div>
-          <div class="form-group">
-            <label for="machine-status">Status *</label>
-            <select id="machine-status" required>
-              <option value="running">Running</option>
-              <option value="idle">Idle</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="error">Error</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="machine-order">Current Order</label>
-            <input type="text" id="machine-order" />
-          </div>
-          <div class="form-group">
-            <label for="machine-output">Output (units)</label>
-            <input type="number" id="machine-output" min="0" value="0" />
-          </div>
-          <div class="form-group">
-            <label for="machine-efficiency">Efficiency (%)</label>
-            <input
-              type="number"
-              id="machine-efficiency"
-              min="0"
-              max="100"
-              value="85"
-            />
-          </div>
-        </form>
-      </cds-modal-body>
-      <cds-modal-footer>
-        <cds-modal-footer-button kind="secondary" data-modal-close
-          >Cancel</cds-modal-footer-button
+    <sl-dialog id="machine-dialog" label="Add Machine" class="machine-dialog">
+      <form id="machine-form">
+        <sl-input
+          id="machine-name"
+          label="Machine Name"
+          placeholder="Enter machine name"
+          required
         >
-        <cds-modal-footer-button kind="primary" id="save-machine-btn"
-          >Save</cds-modal-footer-button
+        </sl-input>
+
+        <sl-select id="machine-status" label="Status" value="running" required>
+          <sl-option value="running">Running</sl-option>
+          <sl-option value="idle">Idle</sl-option>
+          <sl-option value="maintenance">Maintenance</sl-option>
+          <sl-option value="error">Error</sl-option>
+        </sl-select>
+
+        <sl-input
+          id="machine-order"
+          label="Current Order"
+          placeholder="e.g., PO-2024-1234"
         >
-      </cds-modal-footer>
-    </cds-modal>
+        </sl-input>
 
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
+        <sl-input
+          id="machine-output"
+          label="Output (units)"
+          type="number"
+          min="0"
+          value="0"
+        >
+        </sl-input>
 
-    <!-- Scripts -->
+        <sl-input
+          id="machine-efficiency"
+          label="Efficiency (%)"
+          type="number"
+          min="0"
+          max="100"
+          value="85"
+        >
+        </sl-input>
+      </form>
+
+      <div slot="footer">
+        <sl-button variant="default" id="cancel-machine-btn">Cancel</sl-button>
+        <sl-button variant="primary" id="save-machine-btn">Save</sl-button>
+      </div>
+    </sl-dialog>
+
+    <sl-dialog id="delete-dialog" label="Delete Machine" class="delete-dialog">
+      <p id="delete-message">Are you sure you want to delete this machine?</p>
+      <div slot="footer">
+        <sl-button variant="default" id="cancel-delete-btn">Cancel</sl-button>
+        <sl-button variant="danger" id="confirm-delete-btn">Delete</sl-button>
+      </div>
+    </sl-dialog>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/shoelace-autoloader.js"
+    ></script>
+
     <script src="data/mock-data.js"></script>
     <script src="js/store.js"></script>
     <script src="js/dashboard.js"></script>

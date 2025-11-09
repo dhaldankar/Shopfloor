@@ -1,25 +1,20 @@
-// Simple in-memory data store
 const Store = {
   machines: [],
   listeners: [],
 
-  // Initialize store with data
   init(initialData) {
     this.machines = [...initialData];
     this.notify();
   },
 
-  // Get all machines
   getAllMachines() {
     return [...this.machines];
   },
 
-  // Get machine by ID
   getMachineById(id) {
     return this.machines.find((m) => m.id === id);
   },
 
-  // Add new machine
   addMachine(machine) {
     // Generate ID
     const maxId = this.machines.reduce((max, m) => {
@@ -33,7 +28,6 @@ const Store = {
     return machine;
   },
 
-  // Update machine
   updateMachine(id, updates) {
     const index = this.machines.findIndex((m) => m.id === id);
     if (index !== -1) {
@@ -44,7 +38,6 @@ const Store = {
     return null;
   },
 
-  // Delete machine
   deleteMachine(id) {
     const index = this.machines.findIndex((m) => m.id === id);
     if (index !== -1) {
@@ -55,7 +48,6 @@ const Store = {
     return false;
   },
 
-  // Get statistics
   getStats() {
     const stats = {
       total: this.machines.length,
@@ -80,12 +72,10 @@ const Store = {
     return stats;
   },
 
-  // Subscribe to changes
   subscribe(callback) {
     this.listeners.push(callback);
   },
 
-  // Notify all listeners
   notify() {
     this.listeners.forEach((callback) => callback());
   },

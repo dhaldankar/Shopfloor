@@ -1,24 +1,56 @@
-// Dashboard functionality
 const Dashboard = {
   updateInterval: null,
+  currentFilter: null,
 
-  // Initialize dashboard
   init() {
     this.render();
     Store.subscribe(() => this.render());
+    this.setupFilterCards();
 
-    // Start real-time simulation (Cool Feature!)
+    // Start real-time simulation
     this.startRealTimeSimulation();
   },
 
-  // Render dashboard
+  // Setup filter card click handlers
+  setupFilterCards() {
+    const filterCards = document.querySelectorAll(".filter-card");
+    const clearFilterBtn = document.getElementById("clear-filter-btn");
+
+    filterCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        const status = card.dataset.status;
+
+        if (this.currentFilter === status) {
+          this.currentFilter = null;
+          card.classList.remove("active");
+          clearFilterBtn.style.display = "none";
+        } else {
+          filterCards.forEach((c) => c.classList.remove("active"));
+
+          this.currentFilter = status;
+          card.classList.add("active");
+          clearFilterBtn.style.display = "inline-flex";
+        }
+
+        this.renderMachineStatus();
+      });
+    });
+
+    clearFilterBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.currentFilter = null;
+      filterCards.forEach((c) => c.classList.remove("active"));
+      clearFilterBtn.style.display = "none";
+      this.renderMachineStatus();
+    });
+  },
+
   render() {
     this.renderKPIs();
     this.renderMachineStatus();
     this.renderProductionStats();
   },
 
-  // Render KPI cards
   renderKPIs() {
     const stats = Store.getStats();
 
@@ -28,37 +60,88 @@ const Dashboard = {
     document.getElementById("kpi-error").textContent = stats.error;
   },
 
-  // Render machine status grid
   renderMachineStatus() {
-    const machines = Store.getAllMachines();
-    const grid = document.getElementById("machine-status-grid");
+    let machines = Store.getAllMachines();
 
-    grid.innerHTML = machines
+    if (this.currentFilter) {
+      machines = machines.filter((m) => m.status === this.currentFilter);
+    }
+
+    const board = document.getElementById("machine-kanban-board");
+
+    const grouped = {
+      running: machines.filter((m) => m.status === "running"),
+      idle: machines.filter((m) => m.status === "idle"),
+      maintenance: machines.filter((m) => m.status === "maintenance"),
+      error: machines.filter((m) => m.status === "error"),
+    };
+
+    const columnsToShow = this.currentFilter
+      ? [this.currentFilter]
+      : ["running", "idle", "maintenance", "error"];
+
+    board.innerHTML = columnsToShow
       .map(
-        (machine) => `
-            <div class="machine-card ${machine.status}" data-id="${machine.id}">
-                <div class="machine-card-header">
-                    <div class="machine-card-name">${machine.name}</div>
-                    <span class="machine-card-status ${machine.status}">
-                        ${STATUS_LABELS[machine.status]}
-                    </span>
-                </div>
-                <div class="machine-card-info">
-                    <div><strong>Order:</strong> ${
-                      machine.currentOrder || "N/A"
-                    }</div>
-                    <div><strong>Output:</strong> ${machine.output} units</div>
-                    <div><strong>Efficiency:</strong> ${
-                      machine.efficiency
-                    }%</div>
-                </div>
-            </div>
-        `
+        (status) => `
+          <div class="kanban-column ${status}">
+              <div class="kanban-column-header">
+                  <span class="kanban-column-title">${
+                    STATUS_LABELS[status]
+                  }</span>
+                  <span class="kanban-column-count">${
+                    grouped[status].length
+                  }</span>
+              </div>
+              <div class="kanban-cards">
+                  ${
+                    grouped[status].length > 0
+                      ? grouped[status]
+                          .map(
+                            (machine) => `
+                          <div class="kanban-card-item ${
+                            machine.status
+                          }" data-id="${machine.id}">
+                              <div class="kanban-card-header">
+                                  <div class="kanban-card-name">${
+                                    machine.name
+                                  }</div>
+                                  <div class="kanban-card-id">${
+                                    machine.id
+                                  }</div>
+                              </div>
+                              <div class="kanban-card-info">
+                                  <div class="kanban-card-info-row">
+                                      <span class="kanban-card-info-label">Order:</span>
+                                      <span class="kanban-card-info-value">${
+                                        machine.currentOrder || "N/A"
+                                      }</span>
+                                  </div>
+                                  <div class="kanban-card-info-row">
+                                      <span class="kanban-card-info-label">Output:</span>
+                                      <span class="kanban-card-info-value">${
+                                        machine.output
+                                      } units</span>
+                                  </div>
+                                  <div class="kanban-card-info-row">
+                                      <span class="kanban-card-info-label">Efficiency:</span>
+                                      <span class="kanban-card-info-value">${
+                                        machine.efficiency
+                                      }%</span>
+                                  </div>
+                              </div>
+                          </div>
+                      `
+                          )
+                          .join("")
+                      : '<div class="kanban-empty">No machines</div>'
+                  }
+              </div>
+          </div>
+      `
       )
       .join("");
 
-    // Add click handlers to machine cards
-    grid.querySelectorAll(".machine-card").forEach((card) => {
+    board.querySelectorAll(".kanban-card-item").forEach((card) => {
       card.addEventListener("click", () => {
         const machineId = card.dataset.id;
         this.showMachineDetails(machineId);
@@ -66,7 +149,6 @@ const Dashboard = {
     });
   },
 
-  // Render production statistics
   renderProductionStats() {
     const stats = Store.getStats();
 
@@ -74,31 +156,29 @@ const Dashboard = {
       stats.totalOutput.toLocaleString();
     document.getElementById("overall-efficiency").textContent =
       stats.avgEfficiency + "%";
+    document.getElementById("active-machines").textContent = stats.running;
+    document.getElementById("total-machines").textContent = stats.total;
   },
 
-  // Show machine details (could open modal or navigate)
   showMachineDetails(machineId) {
     const machine = Store.getMachineById(machineId);
     if (machine) {
-      // Switch to machines view and highlight
       document.getElementById("nav-machines").click();
 
-      // Highlight row
       setTimeout(() => {
         const row = document.querySelector(`tr[data-id="${machineId}"]`);
         if (row) {
-          row.style.backgroundColor = "#d0e2ff";
+          row.classList.add("highlight-row");
           row.scrollIntoView({ behavior: "smooth", block: "center" });
 
           setTimeout(() => {
-            row.style.backgroundColor = "";
+            row.classList.remove("highlight-row");
           }, 2000);
         }
       }, 100);
     }
   },
 
-  // Real-time simulation (Cool Feature!)
   startRealTimeSimulation() {
     // Update every 3 seconds
     this.updateInterval = setInterval(() => {
@@ -106,27 +186,22 @@ const Dashboard = {
     }, 3000);
   },
 
-  // Simulate real-time machine updates
   simulateRealTimeUpdates() {
     const machines = Store.getAllMachines();
 
     machines.forEach((machine) => {
-      // Only update running machines
       if (machine.status === "running") {
         const updates = {};
 
-        // Randomly increase output (1-10 units)
         const outputIncrease = Math.floor(Math.random() * 10) + 1;
         updates.output = machine.output + outputIncrease;
 
-        // Efficiency fluctuates slightly (±2%)
         const efficiencyChange = Math.floor(Math.random() * 5) - 2;
         updates.efficiency = Math.max(
           0,
           Math.min(100, machine.efficiency + efficiencyChange)
         );
 
-        // Small chance (5%) of status change
         if (Math.random() < 0.05) {
           const possibleStatuses = ["running", "idle", "error"];
           updates.status =
@@ -134,7 +209,6 @@ const Dashboard = {
               Math.floor(Math.random() * possibleStatuses.length)
             ];
 
-          // If changing to idle/error, clear current order
           if (updates.status !== "running") {
             updates.currentOrder = "";
           }
@@ -144,20 +218,17 @@ const Dashboard = {
       }
     });
 
-    // Add visual feedback for updates
     this.animateUpdate();
   },
 
-  // Animate dashboard update
   animateUpdate() {
-    const kpiCards = document.querySelectorAll(".kpi-card");
+    const kpiCards = document.querySelectorAll(".animate-element");
     kpiCards.forEach((card) => {
       card.classList.add("updating");
       setTimeout(() => card.classList.remove("updating"), 1000);
     });
   },
 
-  // Stop simulation (cleanup)
   stopRealTimeSimulation() {
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
