@@ -1,2 +1,0 @@
-# Shopfloor
-Created with CodeSandbox
